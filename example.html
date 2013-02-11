@@ -1,0 +1,78 @@
+﻿<!--
+* Copyright (C) 2013 Jai Shaw. MIT licence below
+* 
+* Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), 
+* to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+* and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+* 
+* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+* LIABILITY, WHETHER IN AN A ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+* DEALINGS IN THE SOFTWARE.
+-->
+
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<script type="text/javascript" src="libs/jquery-1.7.2.js"></script>
+	<script type="text/javascript" src="libs/utilities.js"></script> 	<!-- general functions for debugging -->
+	<script type="text/javascript" src="libs/compress.js"></script> 	<!-- basic compression libary -->
+</head>
+<body>
+	<h1>Huffman Compression example </h1>
+	
+	<div>
+		<textarea style="width:600px;height:300px;" id="comp_input">Input - put text to compress here and press tab to compress it.</textarea>
+
+		<textarea style="width:600px;height:300px;" id="comp_output">compressed text (includes non printable characters!)</textarea>
+	</div>
+	
+	<div>
+		<textarea style="width:1200px;height:300px;" id="uncomp_output">uncompressed from javascript compression string</textarea>
+	</div>
+	<div id="jaiLog" style="font-family:courier;"></div>
+
+	<script type="text/javascript">
+		$(function(){
+			$('#comp_input').blur(function(){blur_compress(this);});
+		});
+		
+		function blur_compress(elementIn)
+		{
+			document.getElementById('jaiLog').innerHTML = ''; // Clear debug output
+			
+			// initial some variables
+			var compData = elementIn.value;
+			var encodeKey = [];
+
+			var compArray = jaiNs.compress.makeArray(compData); // create frequency array			
+			
+			// Create tree and get encodeKey
+			jaiNs.compress.makeTree(compArray);
+			jaiNs.compress.buildBinStrArray(compArray[0],encodeKey);
+			encodeKey.sort(function(e1,e2){return(e2[1]-e1[1]);}); // sorting the key by frequency does speed up both compression and inflation
+			
+			// Compress your data with the encode key
+			for(var e in encodeKey) {jaiNs.util.var_export(encodeKey[e]);}
+			jaiNs.util.echo(' ');
+			var dataCompressed = jaiNs.compress.compress(compData,encodeKey);
+			document.getElementById('comp_output').value = dataCompressed;
+			
+			// determine how much compression we achieved
+			var beforeCount = compData.length;
+			var afterCount = dataCompressed.length;
+			var compPercentage = (afterCount/beforeCount) * 100;
+			compPercentage = compPercentage.toFixed(1);
+			jaiNs.util.echo(' ');
+			jaiNs.util.echo('Compression ' + beforeCount.toString()  + '->' + afterCount.toString() + ' ('+compPercentage.toString()+'%)');
+			
+			// decompress data for verification
+			var origStr = jaiNs.compress.inflate(dataCompressed,encodeKey);
+			document.getElementById('uncomp_output').value = origStr;
+		}
+	</script>
+	
+</body>
+</html>
